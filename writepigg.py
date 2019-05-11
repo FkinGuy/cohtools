@@ -121,7 +121,7 @@ class PiggFile(object):
 
     self.f.close()
 
-    self.f = open(fname+".pigg", "r+")
+    self.f = open(fname+".pigg", "rb+")
 
     self.f.seek(16)
 
@@ -131,16 +131,21 @@ class PiggFile(object):
       info1 = dico_fichiers[fichier][0]
       strnum = dico_fichiers[fichier][1]
       fsize = dico_fichiers[fichier][2]
-      ftstamp = dico_fichiers[fichier][3]
+      #ftstamp = dico_fichiers[fichier][3]
+      ftstamp = 0
       offset = liste_offsets[i]
       info2 = dico_fichiers[fichier][5]
       slotnum = dico_fichiers[fichier][6]
       fmd5 = dico_fichiers[fichier][7]
       csize = dico_fichiers[fichier][8]
-      print repr(offset)
+      print repr(offset), dico_fichiers[fichier]
       self.files_pack = struct.pack("<LLLLLLL16sL", info1, strnum, fsize, ftstamp, offset, info2, slotnum, fmd5, csize)
+      print "longueur du pack",len(self.files_pack)
       self.f.write(self.files_pack)
+      pos1=pos
       pos = self.f.tell()
+      if (pos - pos1) == 49:
+		sys.exit(1)
       print "fin reecriture fichier et csize", fichier, pos, csize
       i += 1
 
