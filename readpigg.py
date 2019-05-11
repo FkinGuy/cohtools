@@ -28,37 +28,51 @@ class PiggFile(object):
 
     self.f = open(fname, "rb")
 
-    hdr = self.read_struct("<LHHHHL", 16)
-    if hdr[0] != 0x123:
+    self.hdr = self.read_struct("<LHHHHL", 16)
+    if self.hdr[0] != 0x123:
       print "Not a PIGG file!"
       return
-    ents = hdr[5]
+    ents = self.hdr[5]
+
+    print "fin hdr", self.f.tell()
 
     # read directory entries
     for n in range(0, ents):
       ent = self.read_struct("<LLLLLLL16sL", 48)
       self.files.append(DirEntry(ent))
 
+    print "fin direntries", self.f.tell()
+
     # read string table
-    strhdr = self.read_struct("<LLL", 12)
-    if strhdr[0] != 0x6789:
+    self.strhdr = self.read_struct("<LLL", 12)
+    if self.strhdr[0] != 0x6789:
       print "Invalid string table!"
       return
 
+    print "fin strhdr", self.f.tell()
+
     pos = self.f.tell()
 
-    for n in range(0, strhdr[1]):
+    print "strhdr1",self.strhdr[1]
+
+    for n in range(0, self.strhdr[1]):
       s = self.read_string()
       self.strings.append(s)
 
+    print "strhdr2=",self.strhdr[2]
     # read slot table
-    pos += strhdr[2]
+    pos += self.strhdr[2]
     self.f.seek(pos)
-    slothdr = self.read_struct("<LLL", 12)
-    if slothdr[0] != 0x9abc:
+
+    print "seeek pos",pos
+
+    self.slothdr = self.read_struct("<LLL", 12)
+    if self.slothdr[0] != 0x9abc:
       print "Invalid slot table!"
       return
-    for n in range(0, slothdr[1]):
+
+
+    for n in range(0, self.slothdr[1]):
       s = self.read_vardata()
       ds = self.decompress_slot(s)
       self.slots.append(s)
@@ -91,16 +105,22 @@ class PiggFile(object):
 
   def extract_files(self, args, options):
     for ent in self.files:
+      print self.f.tell()
       if not is_match(ent.name, args):
         continue
       name = ent.name
+      print name
+
       if not options.quiet and not options.pipe:
         print "Extracting %s..." % name
       self.f.seek(ent.offset)
       if ent.csize == 0:
         data = self.f.read(ent.fsize)
       else:
+        print self.f.tell()
         cdata = self.f.read(ent.csize)
+        print len(cdata)
+        print self.f.tell()
         data = zlib.decompress(cdata)
       if options.pipe:
         sys.stdout.write(data)
@@ -166,6 +186,7 @@ class PiggFile(object):
     return self.read_vardata()[:-1]
 
 def main():
+
   usage = "usage: %prog [options] file.pigg [filenames]"
   parser = optparse.OptionParser(usage=usage)
   parser.add_option("-l", "--list",
