@@ -42,6 +42,7 @@ class PiggFile(object):
     print "fin hdr:",pos
 
     #print (liste_fichiers)
+    i=0
     dico_fichiers={}
     for fichier in liste_fichiers:
       fsize = os.path.getsize(fichier)
@@ -58,7 +59,7 @@ class PiggFile(object):
 
       slot = None
       slotnum = long(0)
-      strnum = 0
+      strnum = i
       ftstamp = os.path.getmtime(fichier)
 
       fichier_data_z = zlib.compress(fichier_data)
@@ -73,6 +74,7 @@ class PiggFile(object):
       self.f.write(self.files_pack)
       pos=self.f.tell()
       print "fin ecriture dir fichier et csize ", fichier, pos, csize
+      i += 1
     #print dico_fichiers
 
     pos = self.f.tell()
@@ -131,8 +133,7 @@ class PiggFile(object):
       info1 = dico_fichiers[fichier][0]
       strnum = dico_fichiers[fichier][1]
       fsize = dico_fichiers[fichier][2]
-      #ftstamp = dico_fichiers[fichier][3]
-      ftstamp = 0
+      ftstamp = dico_fichiers[fichier][3]
       offset = liste_offsets[i]
       info2 = dico_fichiers[fichier][5]
       slotnum = dico_fichiers[fichier][6]
